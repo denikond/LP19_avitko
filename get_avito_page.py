@@ -15,14 +15,14 @@ def get_item_data(html_text):
     #номер объявления - пока некрасивый, как буду писать в базу нужно номализовать
     num_sign = soup.findAll("span", {"data-marker": "item-view/item-id"})
     #они бывают пустыми как выяснилось
-    if len(num_sign)!=0:
+    if len(num_sign):
         num_sign = num_sign[0].next
     else:
         num_sign = ''
     #дата подачи объявления - они прколисты, придется писать парсер времени авито-времени
     date_sign = soup.findAll("div", {"class": "title-info-metadata-item-redesign"})
     #она тоже бывает пустой
-    if len(date_sign)!=0:
+    if len(date_sign):
         date_sign = date_sign[0].next
     else:
         date_sign = ''
@@ -33,21 +33,21 @@ def get_item_data(html_text):
     #варим в супе адрес
     addr = soup.findAll("span", {"class": "item-address__string"})
     #были объявления без адреса
-    if len(addr) != 0:
+    if len(addr):
         addr = addr[0].next
     else:
         addr = ''
     #варим в супе цену
     price = soup.findAll("span", {"class": "js-item-price"})
     #обратить внимаение иногда вываривается несколько цен - возмножно для индикатора роста или падения
-    if len(price)!=0:
+    if len(price):
         price = price[0].next
     else:
         price = ''
     #сообщения к объявлению
     message_text = soup.findAll("div", {"class": "item-description-text"})
     #формат полное безумие включая набор смайлов, в utf-8
-    if len(message_text)!=0:
+    if len(message_text):
         message_text = message_text[0].find_all('p')[0].next
     else:
         message_text = ''
