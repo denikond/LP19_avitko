@@ -8,7 +8,7 @@ import lxml
 fake_header =  { 'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36' }
 
 def get_item_data(html_text):
-    #парсер индивидуальной страницы с товаром, без нормальзации полей
+    """ парсер индивидуальной страницы с товаром, без нормальзации полей """
     soup = BeautifulSoup(html_text, 'lxml')
     #наименование товара
     item_name = soup.findAll("span", {"class": "title-info-title-text"})[0].next
@@ -65,19 +65,22 @@ def get_item_data(html_text):
 
 
 def get_item_page(postfix_url):
-    #парсер индивидуальной страницы товара
+    """ парсер индивидуальной страницы товара """
     prefix = 'https://www.avito.ru'
     item_url = prefix + postfix_url
     req_response = requests.get(item_url, headers=fake_header)
     if req_response.status_code == 200:
         print(item_url)
         get_item_data(req_response.text)
+    else:
+        print('ВНИМАНИЕ ОШИБКА ЧТЕНИЯ response = ', req_response.status_code)
+        print(item_url)
     #симулятор неравномерной задержки
     wait_time = random.uniform(4, 7)
     time.sleep(wait_time)    
 
 def index_page_parser(html_text):
-    #парсер индексной страницы товаров
+    """ парсер индексной страницы товаров """
     soup = BeautifulSoup(html_text, 'lxml')
     mydivs = soup.findAll("div", {"class": "iva-item-titleStep-2bjuh"})
     #выбрали массив ссылок на товары, начинаем перебирать их
@@ -89,7 +92,7 @@ def index_page_parser(html_text):
 
 
 def get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_kompyutera/komplektuyuschie/videokarty', pagenum_start=1, pagenum_end=2):
-    #функция читает индексную страницу
+    """ функция читает индексную страницу """
 #    fake_header =  { 'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36' }
     req_response = requests.get(start_section_url, headers=fake_header)
     start_section_url = req_response.url
@@ -101,10 +104,14 @@ def get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_ko
             req_response = requests.get(start_section_url, headers=fake_header, params=payload)
         else:
             req_response = requests.get(start_section_url, headers=fake_header)
-        print('URL=' + req_response.url + ' | status= ' + str(req_response.status_code))
+        
         if req_response.status_code == 200:
-            #вызываем парсер инджексной страницы
+            #вызываем парсер индексной страницы
+            print('URL=' + req_response.url + ' | status= ' + str(req_response.status_code))
             index_page_parser(req_response.text)
+        else:
+            print('ВНИМАНИЕ ОШИБКА ЧТЕНИЯ')
+            print('URL=' + req_response.url + ' | status= ' + str(req_response.status_code))
         #слабый симулякр неравносмерной задержки
         wait_time = random.uniform(4, 7)
         time.sleep(wait_time)
