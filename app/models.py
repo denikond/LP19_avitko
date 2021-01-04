@@ -16,7 +16,7 @@ class Item(db.Model):
 class Image(db.Model):
 
     key = db.Column(db.Integer, primary_key=True)
-    num_of_ad = db.Column(db.String(32), ForeignKey('Items.num_of_ad'))
+    num_of_ad = db.Column(db.String(32), db.ForeignKey('item.num_of_ad'))
     image_path = db.Column(db.String(255))
 
     def __repr__(self):
