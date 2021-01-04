@@ -2,7 +2,7 @@ from app import db
 
 class Item(db.Model):
 
-    key = db.Column(Integer, primary_key=True)
+    key = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(255), index=True)
     num_of_ad = db.Column(db.String(32), index=True, unique=True)
     creation_date = db.Column(db.Date)
