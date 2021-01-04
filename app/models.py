@@ -10,10 +10,14 @@ class Item(db.Model):
     price = db.Column(db.Integer)
     extended_text = db.Column(db.Text)
 
-"""
+    def __repr__(self):
+        return '<num_of_ad {}>'.format(self.description)
+
 class Image(db.Model):
 
     key = db.Column(db.Integer, primary_key=True)
     num_of_ad = db.Column(db.String(32), ForeignKey('Items.num_of_ad'))
     image_path = db.Column(db.String(255))
-"""
+
+    def __repr__(self):
+        return '<image_path {}>'.format(self.image_path)
