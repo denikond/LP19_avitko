@@ -4,8 +4,73 @@ import random
 import time
 from bs4 import BeautifulSoup
 import lxml
+from app import db
+from app.models import Item, Image
+from datetime import datetime, timedelta
+import os
+import urllib.request
+import config
+from PIL import Image as PImage
 
 fake_header =  { 'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36' }
+
+def images_store_dir_n_db(img_urls, num_of_ad_i):
+    """ Функция сохраняющая картинки объявления на диск и в базу
+    входной параметр - массив ссылок на картинки и номер объявления"""
+
+    for ind, img in enumerate(img_urls):
+        fo_name = num_of_ad_i + "_" + (f"{str(ind):>3}").replace(" ","0") + ".jpg"
+        fo_norm = os.path.join(config.img_normal_dir, fo_name)
+        fo_thumb = os.path.join(config.img_thumb_dir, fo_name)
+
+        try:
+            urllib.request.urlretrieve(img, fo_norm)
+        except Exception as err:
+            print(err)
+
+        try:
+            with PImage.open(fo_norm) as im:
+                im.thumbnail(config.thumb_size)
+                im.save(fo_thumb, "JPEG")
+        except OSError:
+            print("cannot create thumbnail for", fo_norm)
+
+        grabed_Image = Image(num_of_ad=num_of_ad_i,image_path=fo_name)
+        db.session.add(grabed_Image)
+        try:
+            db.session.commit()
+        except Exception as err:
+            db.session.rollback()
+            print(err)
+
+
+def parse_date(str_i):
+
+    months = [" ", "января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
+
+    """ функция преобразующая текстовую дату с Авито в объект datetime 
+    входные данные строка, начинается символ \n, пробелы, потом "сегодня| число месяц" 
+    далее опционально время ЧЧ:ММ (может быть, может не быть) """
+    date_split = str_i[1:].split()
+    if date_split[0] == 'сегодня':
+        ad_date = datetime.today()
+        ad_time = datetime.strptime(date_split[2], "%H:%M").time()
+        ad_datetime = datetime.combine(ad_date, ad_time)
+    elif date_split[0] == 'вчера':
+        ad_date = datetime.today() - timedelta(days=1)
+        ad_time = datetime.strptime(date_split[2], "%H:%M").time()
+        ad_datetime = datetime.combine(ad_date, ad_time)
+    else:
+        ad_day = int(date_split[0])
+        ad_mon = months.index(date_split[1])
+        if date_split[2] == 'в':
+            ad_year = datetime.now().year
+            ad_time = datetime.strptime(date_split[3], "%H:%M").time()
+        else:
+            ad_year = int(date_split[3])
+            ad_time = datetime.strptime(date_split[4], "%H:%M").time()
+        ad_datetime = datetime.combine(datetime(year=ad_year, month=ad_mon, day=ad_day), ad_time)
+    return ad_datetime
 
 def get_item_data(html_text):
     """ парсер индивидуальной страницы с товаром, без нормальзации полей """
@@ -16,18 +81,21 @@ def get_item_data(html_text):
     num_sign = soup.findAll("span", {"data-marker": "item-view/item-id"})
     #они бывают пустыми как выяснилось
     if len(num_sign):
-        num_sign = num_sign[0].next
+        num_sign = "".join(x for x in num_sign[0].next if x.isdigit()) 
     else:
         num_sign = ''
     #дата подачи объявления - они прколисты, придется писать парсер времени авито-времени
     date_sign = soup.findAll("div", {"class": "title-info-metadata-item-redesign"})
     #она тоже бывает пустой
     if len(date_sign):
-        date_sign = date_sign[0].next
+        date_sign = parse_date(date_sign[0].next)
     else:
-        date_sign = ''
+        date_sign = None
     #варим в супе все ссылки на фотки с товаром
-    img_path = soup.findAll("div", {"class": "gallery-img-frame js-gallery-img-frame"})
+    #это были thumb's 640x480
+    #img_path = soup.findAll("div", {"class": "gallery-img-frame js-gallery-img-frame"})
+    #это полноразмерные фото  
+    img_path = soup.findAll("div", {"class": "gallery-extended-img-frame js-gallery-extended-img-frame"})
     #получаем список картинок
     img_urls = [img.attrs['data-url'] for img in img_path]
     #варим в супе адрес
@@ -41,9 +109,9 @@ def get_item_data(html_text):
     price = soup.findAll("span", {"class": "js-item-price"})
     #обратить внимаение иногда вываривается несколько цен - возмножно для индикатора роста или падения
     if len(price):
-        price = price[0].next
+        price = int(price[0].next.replace(' ', ''))
     else:
-        price = ''
+        price = 0
     #сообщения к объявлению
     message_text = soup.findAll("div", {"class": "item-description-text"})
     #формат полное безумие включая набор смайлов, в utf-8
@@ -51,7 +119,8 @@ def get_item_data(html_text):
         message_text = message_text[0].find_all('p')[0].next
     else:
         message_text = ''
-    #Ниже временная фигня для записи строки в файл и визуального контроля 
+    #Ниже временная фигня для записи строки в файл и визуального контроля
+    """
     str1 = item_name + ';' + num_sign + ';' + date_sign + ';' + img_urls[0] + ';' + addr + ';' + price + ';' + message_text
     str2 = ''
     for i in str1:
@@ -60,8 +129,19 @@ def get_item_data(html_text):
     str2 += '\n'
     print(str2)
     with open('out.csv', 'a+',encoding='utf-8') as of:
-        of.write(str2)
+        of.write(str2)"""
     #конец временной фигни для записи в файл и визуального контроля
+    grabed_Item = Item(description=item_name,num_of_ad=num_sign,creation_date=date_sign,address=addr,price=price,extended_text=message_text)
+    db.session.add(grabed_Item)
+    try:
+        db.session.commit()
+    except Exception as err:
+        db.session.rollback()
+        print(err)
+        #print("Такое объявление уже есть, импорт не производится")
+    else:
+        images_store_dir_n_db(img_urls,num_sign)
+        
 
 
 def get_item_page(postfix_url):
