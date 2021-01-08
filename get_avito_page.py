@@ -66,9 +66,12 @@ def parse_date(str_i):
         if date_split[2] == 'в':
             ad_year = datetime.now().year
             ad_time = datetime.strptime(date_split[3], "%H:%M").time()
-        else:
+        elif len(date_split)>3:
             ad_year = int(date_split[3])
             ad_time = datetime.strptime(date_split[4], "%H:%M").time()
+        else:
+            ad_year = int(date_split[2])
+            ad_time = datetime.strptime('0:0', "%H:%M").time()
         ad_datetime = datetime.combine(datetime(year=ad_year, month=ad_mon, day=ad_day), ad_time)
     return ad_datetime
 
@@ -94,8 +97,9 @@ def get_item_data(html_text):
     #варим в супе все ссылки на фотки с товаром
     #это были thumb's 640x480
     #img_path = soup.findAll("div", {"class": "gallery-img-frame js-gallery-img-frame"})
-    #это полноразмерные фото  
-    img_path = soup.findAll("div", {"class": "gallery-extended-img-frame js-gallery-extended-img-frame"})
+    #это полноразмерные фото  gallery-extended-img-frame gallery-extended-img-frame_state-selected js-gallery-extended-img-frame
+    #img_path = soup.findAll("div", {"class": "gallery-extended-img-frame js-gallery-extended-img-frame"})
+    img_path = soup.findAll("div", {"class": "gallery-extended-img-frame"})
     #получаем список картинок
     img_urls = [img.attrs['data-url'] for img in img_path]
     #варим в супе адрес
@@ -131,16 +135,19 @@ def get_item_data(html_text):
     with open('out.csv', 'a+',encoding='utf-8') as of:
         of.write(str2)"""
     #конец временной фигни для записи в файл и визуального контроля
-    grabed_Item = Item(description=item_name,num_of_ad=num_sign,creation_date=date_sign,address=addr,price=price,extended_text=message_text)
-    db.session.add(grabed_Item)
-    try:
-        db.session.commit()
-    except Exception as err:
-        db.session.rollback()
-        print(err)
-        #print("Такое объявление уже есть, импорт не производится")
+    if num_sign != '':
+        grabed_Item = Item(description=item_name,num_of_ad=num_sign,creation_date=date_sign,address=addr,price=price,extended_text=message_text)
+        db.session.add(grabed_Item)
+        try:
+            db.session.commit()
+        except Exception as err:
+            db.session.rollback()
+            print(err)
+            #print("Такое объявление уже есть, импорт не производится")
+        else:
+            images_store_dir_n_db(img_urls,num_sign)
     else:
-        images_store_dir_n_db(img_urls,num_sign)
+        print("!!! Обнаружена реклама, а не объявление, исключено из импорта в базу")
         
 
 
@@ -156,28 +163,28 @@ def get_item_page(postfix_url):
         print('ВНИМАНИЕ ОШИБКА ЧТЕНИЯ response = ', req_response.status_code)
         print(item_url)
     #симулятор неравномерной задержки
-    wait_time = random.uniform(4, 7)
+    wait_time = random.uniform(3, 5)
     time.sleep(wait_time)    
 
-def index_page_parser(html_text):
+def index_page_parser(html_text, index_num):
     """ парсер индексной страницы товаров """
     soup = BeautifulSoup(html_text, 'lxml')
     mydivs = soup.findAll("div", {"class": "iva-item-titleStep-2bjuh"})
     #выбрали массив ссылок на товары, начинаем перебирать их
     n = 1 
     for div in mydivs:
-        print('    ' + str(n)+ ' ' + div.text + ' || ' + div.contents[0]['href'])
+        print('    ' + str(index_num) + ' : ' + str(n)+ ' ' + div.text + ' || ' + div.contents[0]['href'])
         get_item_page(div.contents[0]['href'])
         n += 1
 
 
-def get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_kompyutera/komplektuyuschie/videokarty', pagenum_start=1, pagenum_end=2):
+def get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_kompyutera/komplektuyuschie/videokarty', pagenum_start=1, pagenum_end=20):
     """ функция читает индексную страницу """
 #    fake_header =  { 'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36' }
     req_response = requests.get(start_section_url, headers=fake_header)
     start_section_url = req_response.url
     #без этой ^ хрени не работает переход по подстраницам ?p=2 к стартовой странице приклеивается суффикс
-    for page_counter in range(pagenum_start, pagenum_end):
+    for page_counter in range(pagenum_start, pagenum_end+1):
         #перебираем страницы с индексами
         if page_counter > 1 :
             payload = {'p': str(page_counter)}
@@ -188,7 +195,7 @@ def get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_ko
         if req_response.status_code == 200:
             #вызываем парсер индексной страницы
             print('URL=' + req_response.url + ' | status= ' + str(req_response.status_code))
-            index_page_parser(req_response.text)
+            index_page_parser(req_response.text, page_counter)
         else:
             print('ВНИМАНИЕ ОШИБКА ЧТЕНИЯ')
             print('URL=' + req_response.url + ' | status= ' + str(req_response.status_code))
@@ -201,8 +208,10 @@ def main():
     #logging.basicConfig(level=logging.DEBUG)
     #logging.debug('This will get logged')
 
-    get_index_page()
+    #get_index_page()
+    get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_kompyutera/komplektuyuschie/videokarty', pagenum_start=1, pagenum_end=2)
 
+    #get_item_page("/moskva/tovary_dlya_kompyutera/radeon_hd_5570_1gb_2051605184")
 
 if __name__ == "__main__":
     main()
