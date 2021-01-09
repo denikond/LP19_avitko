@@ -11,37 +11,46 @@ import os
 import urllib.request
 import config
 from PIL import Image as PImage
+from sqlalchemy.exc import IntegrityError
 
 fake_header =  { 'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36' }
 
 def images_store_dir_n_db(img_urls, num_of_ad_i):
-    """ Функция сохраняющая картинки объявления на диск и в базу
-    входной параметр - массив ссылок на картинки и номер объявления"""
+    """ Функция сохраняющая картинки объявления на диск и ссылку в базу
+    входной параметр - массив url ссылок на картинки и номер объявления"""
 
     for ind, img in enumerate(img_urls):
         fo_name = num_of_ad_i + "_" + (f"{str(ind):>3}").replace(" ","0") + ".jpg"
         fo_norm = os.path.join(config.img_normal_dir, fo_name)
         fo_thumb = os.path.join(config.img_thumb_dir, fo_name)
 
+        print("-"*30)
+
         try:
             urllib.request.urlretrieve(img, fo_norm)
         except Exception as err:
-            print(err)
+            print("Ошибка импорта url=", img, " Запись в файл ",fo_norm, " Ошибка ", err)
+        else:
+            print("На диск Импортировано изображение", fo_norm)
+            try:
+                with PImage.open(fo_norm) as im:
+                    im.thumbnail(config.thumb_size)
+                    im.save(fo_thumb, "JPEG")
+            except OSError:
+                print("Не возможно создать миниатюру для ", fo_norm)
+            else:
+                print("Создана миниатюра ", fo_thumb)
 
-        try:
-            with PImage.open(fo_norm) as im:
-                im.thumbnail(config.thumb_size)
-                im.save(fo_thumb, "JPEG")
-        except OSError:
-            print("cannot create thumbnail for", fo_norm)
-
-        grabed_Image = Image(num_of_ad=num_of_ad_i,image_path=fo_name)
-        db.session.add(grabed_Image)
-        try:
-            db.session.commit()
-        except Exception as err:
-            db.session.rollback()
-            print(err)
+                grabed_Image = Image(num_of_ad=num_of_ad_i,image_path=fo_name)
+                db.session.add(grabed_Image)
+                try:
+                    db.session.commit()
+                except Exception as err:
+                    db.session.rollback()
+                    print("Не произведена запись в базу информации о изображении ", fo_name)
+                    print(err)
+                else:
+                    print("Произведена запись в базу информации о изображении ", fo_name)
 
 
 def parse_date(str_i):
@@ -140,12 +149,17 @@ def get_item_data(html_text):
         db.session.add(grabed_Item)
         try:
             db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            print("Объявление ",num_sign," уже есть, импорт не производится")
         except Exception as err:
             db.session.rollback()
             print(err)
-            #print("Такое объявление уже есть, импорт не производится")
+            
         else:
+            print("Объявление ",num_sign," импортировано в базу")
             images_store_dir_n_db(img_urls,num_sign)
+
     else:
         print("!!! Обнаружена реклама, а не объявление, исключено из импорта в базу")
         
@@ -157,11 +171,11 @@ def get_item_page(postfix_url):
     item_url = prefix + postfix_url
     req_response = requests.get(item_url, headers=fake_header)
     if req_response.status_code == 200:
-        print(item_url)
+        print('Успешное чтение ссылки',item_url)
         get_item_data(req_response.text)
     else:
-        print('ВНИМАНИЕ ОШИБКА ЧТЕНИЯ response = ', req_response.status_code)
-        print(item_url)
+        print('ВНИМАНИЕ ОШИБКА ЧТЕНИЯ ссылки', item_url)
+        print('response = ', req_response.status_code)
     #симулятор неравномерной задержки
     wait_time = random.uniform(3, 5)
     time.sleep(wait_time)    
@@ -173,8 +187,9 @@ def index_page_parser(html_text, index_num):
     #выбрали массив ссылок на товары, начинаем перебирать их
     n = 1 
     for div in mydivs:
-        print('    ' + str(index_num) + ' : ' + str(n)+ ' ' + div.text + ' || ' + div.contents[0]['href'])
+        print('инд.страница:' + str(index_num) + ' | объявление:' + str(n)+ ' | ' + div.text)
         get_item_page(div.contents[0]['href'])
+        print('-'*70)
         n += 1
 
 
@@ -191,14 +206,17 @@ def get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_ko
             req_response = requests.get(start_section_url, headers=fake_header, params=payload)
         else:
             req_response = requests.get(start_section_url, headers=fake_header)
-        
+        print('+'*70)
+        print('Индексная страница URL=' + req_response.url + ' | status= ' + str(req_response.status_code))
         if req_response.status_code == 200:
             #вызываем парсер индексной страницы
-            print('URL=' + req_response.url + ' | status= ' + str(req_response.status_code))
+            print('Успешное чтение')
+            print('+'*70)
             index_page_parser(req_response.text, page_counter)
         else:
             print('ВНИМАНИЕ ОШИБКА ЧТЕНИЯ')
-            print('URL=' + req_response.url + ' | status= ' + str(req_response.status_code))
+            print('+'*70)
+        
         #слабый симулякр неравносмерной задержки
         wait_time = random.uniform(4, 7)
         time.sleep(wait_time)
@@ -209,7 +227,7 @@ def main():
     #logging.debug('This will get logged')
 
     #get_index_page()
-    get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_kompyutera/komplektuyuschie/videokarty', pagenum_start=1, pagenum_end=2)
+    get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_kompyutera/komplektuyuschie/videokarty', pagenum_start=1, pagenum_end=1)
 
     #get_item_page("/moskva/tovary_dlya_kompyutera/radeon_hd_5570_1gb_2051605184")
 
