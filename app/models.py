@@ -11,7 +11,7 @@ class Item(db.Model):
     extended_text = db.Column(db.Text)
 
     def __repr__(self):
-        return '<num_of_ad {}>'.format(self.description)
+        return '<num_of_ad:{} | description:{}>'.format(self.num_of_ad, self.description)
 
 class Image(db.Model):
 
