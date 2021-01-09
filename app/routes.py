@@ -1,13 +1,22 @@
 from flask import render_template, session
 from markupsafe import escape
-from app import app
+from app import app, db
 import click
 import get_avito_page
+from app.models import Item, Image
+
 
 @app.route('/')
 @app.route('/index')
 def index():
-    return "Hello, World!"
+	title = "Объявления по теме"
+	#i_set = Item.query.limit(20).offset(1).all()
+	i_set = db.session.query(Item,Image).join(Image).group_by(Item).limit(20).all()
+	
+	#iset = ['One','Two','Three']
+	
+    #return render_template('item_list.html', page_title=title, ilist=iset)
+	return render_template('item_list.html', page_title=title, i_list=i_set)
 
 @app.cli.command("import-avitodata")
 @click.argument('start_index_page', nargs=1)
