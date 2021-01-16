@@ -1,0 +1,44 @@
+body {
+    background-color: #BDBDBD
+}
+
+.badge23 {
+    display: inline-block;
+    padding: 0.30em .4em;
+    font-size: 75%;
+    font-weight: 300;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25rem;
+    color: #fff;
+    background-color: #28a745
+}
+
+.rating-review {
+    color: #5b5b5b;
+    font-size: 12px
+}
+
+.product_price {
+    display: inline-block;
+    font-size: 30px;
+    font-weight: 400;
+    margin-top: -11px;
+    margin-bottom: 0px;
+    color: #080808;
+    clear: left
+}
+
+.list-group-item {
+    position: relative;
+    display: block;
+    margin-bottom: -1px;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, .125)
+}
+
+.seperator {
+    background: #a2a2efb8
+}
