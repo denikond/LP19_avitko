@@ -24,7 +24,7 @@
 				{% for p_item in i_list %}
 				
                 <li class="list-group-item">
-                    <div class="media align-items-lg-center flex-column flex-lg-row"> <img src="/static/images/normal/{{ p_item.Image.image_path }}" alt="Generic placeholder image" width="250" height="200" class="order-1 order-lg-1">
+                    <div class="media align-items-lg-center flex-column flex-lg-row"> <img src="/static/images/thumb/{{ p_item.Image.image_path }}" alt="Generic placeholder image" width="250" height="200" class="order-1 order-lg-1">
                         <div class="media-body order-2 order-lg-2 ml-lg-5">
                             <h5 class="mt-0 mb-1">{{ p_item.Item.description }}</h5>
 							<div class="product-rating mb-2"> <span class="rating-review mb-1">№ {{ p_item.Item.num_of_ad }}</span> </div> <span class="product_price price-new">₽ {{ p_item.Item.price }} </span>

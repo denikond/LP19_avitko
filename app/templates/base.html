@@ -12,11 +12,16 @@
 
     </head>
     <body>
-        <div id="header">AVITKO:  <a href="/index">Home</a>  <a href="/login">Login</a></div>
-        <hr>
+        <div id="header">AVITKO:  
+        <a href="{{ url_for('index') }}">Home</a>
+        {% if current_user.is_anonymous %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a>Добро пожаловать, Гость</a>
+        {% else %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+        <a>Добро пожаловать, {{ current_user.username }}</a>
+        {% endif %}
+        </div>
         {% block content %}{% endblock %}
     </body>
 </html>
-
-
-
