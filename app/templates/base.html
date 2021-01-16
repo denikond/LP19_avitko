@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        
+        {% if title %}
+        <title>{{ title }} - AVITKO</title>
+        {% else %}
+        <title>Магазинчик AVITKO</title>
+        {% endif %}
+
+    </head>
+    <body>
+        <div id="header">AVITKO:  <a href="/index">Home</a>  <a href="/login">Login</a></div>
+        <hr>
+        {% block content %}{% endblock %}
+    </body>
+</html>
+
+
+

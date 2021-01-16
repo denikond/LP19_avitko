@@ -5,7 +5,7 @@ import time
 from bs4 import BeautifulSoup
 import lxml
 from app import db
-from app.models import Item, Image
+from app.models import Item, Image, User
 from datetime import datetime, timedelta
 import os
 import urllib.request
@@ -14,6 +14,8 @@ from PIL import Image as PImage
 from sqlalchemy.exc import IntegrityError
 
 fake_header =  { 'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36' }
+sys_imp_username = User
+
 
 def images_store_dir_n_db(img_urls, num_of_ad_i):
     """ Функция сохраняющая картинки объявления на диск и ссылку в базу
@@ -144,8 +146,10 @@ def get_item_data(html_text):
     with open('out.csv', 'a+',encoding='utf-8') as of:
         of.write(str2)"""
     #конец временной фигни для записи в файл и визуального контроля
+    global sys_imp_username
+    
     if num_sign != '':
-        grabed_Item = Item(description=item_name,num_of_ad=num_sign,creation_date=date_sign,address=addr,price=price,extended_text=message_text)
+        grabed_Item = Item(description=item_name,num_of_ad=num_sign,creation_date=date_sign,address=addr,price=price,extended_text=message_text,user_id=sys_imp_username.id)
         db.session.add(grabed_Item)
         try:
             db.session.commit()
@@ -196,6 +200,15 @@ def index_page_parser(html_text, index_num):
 def get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_kompyutera/komplektuyuschie/videokarty', pagenum_start=1, pagenum_end=20):
     """ функция читает индексную страницу """
 #    fake_header =  { 'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36' }
+    global sys_imp_username
+    try:
+        sys_imp_username = db.session.query(User).filter(User.username == config.SYS_IMPORT_USERNAME).one()
+    #except NoResltFound:
+    #     print("1")
+    except Exception as err:
+        print(err)
+        raise
+
     req_response = requests.get(start_section_url, headers=fake_header)
     start_section_url = req_response.url
     #без этой ^ хрени не работает переход по подстраницам ?p=2 к стартовой странице приклеивается суффикс
