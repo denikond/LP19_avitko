@@ -13,8 +13,10 @@ import config
 from PIL import Image as PImage
 from sqlalchemy.exc import IntegrityError
 
-fake_header =  { 'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36' }
+fake_header =  { 'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36' }
 sys_imp_username = User
+min_wait = 3
+max_wait = 5
 
 
 def images_store_dir_n_db(img_urls, num_of_ad_i):
@@ -36,7 +38,7 @@ def images_store_dir_n_db(img_urls, num_of_ad_i):
             print("На диск Импортировано изображение", fo_norm)
             try:
                 with PImage.open(fo_norm) as im:
-                    im.thumbnail(config.thumb_size)
+                    im.thumbnail(config.THUMB_SIZE)
                     im.save(fo_thumb, "JPEG")
             except OSError:
                 print("Не возможно создать миниатюру для ", fo_norm)
@@ -155,7 +157,7 @@ def get_item_data(html_text):
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            print("Объявление ",num_sign," уже есть, импорт не производится")
+            print("Объявление ", num_sign, " уже есть, импорт не производится")
         except Exception as err:
             db.session.rollback()
             print(err)
@@ -171,18 +173,36 @@ def get_item_data(html_text):
 
 def get_item_page(postfix_url):
     """ парсер индивидуальной страницы товара """
+    global min_wait
+    global max_wait
+
     prefix = 'https://www.avito.ru'
     item_url = prefix + postfix_url
     req_response = requests.get(item_url, headers=fake_header)
     if req_response.status_code == 200:
         print('Успешное чтение ссылки',item_url)
         get_item_data(req_response.text)
+    elif req_response.status_code == 429:
+        while req_response.status_code == 429:
+            print('response = 429 Too many requests')
+            min_wait *= 2
+            max_wait *= 2
+            wait_time = random.uniform(min_wait, max_wait)
+            print('Ожидание ', wait_time)
+            time.sleep(wait_time)
+            req_response = requests.get(item_url, headers=fake_header)
+        if req_response.status_code == 200:
+            print('Успешное чтение ссылки',item_url)
+            get_item_data(req_response.text)
+        else:
+            print('ВНИМАНИЕ ОШИБКА ЧТЕНИЯ ссылки', item_url)
+            print('response = ', req_response.status_code)
     else:
         print('ВНИМАНИЕ ОШИБКА ЧТЕНИЯ ссылки', item_url)
         print('response = ', req_response.status_code)
     #симулятор неравномерной задержки
-    wait_time = random.uniform(3, 5)
-    time.sleep(wait_time)    
+    wait_time = random.uniform(min_wait, max_wait)
+    time.sleep(wait_time)
 
 def index_page_parser(html_text, index_num):
     """ парсер индексной страницы товаров """
@@ -201,6 +221,10 @@ def get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_ko
     """ функция читает индексную страницу """
 #    fake_header =  { 'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36' }
     global sys_imp_username
+    global min_wait
+    global max_wait
+
+
     try:
         sys_imp_username = db.session.query(User).filter(User.username == config.SYS_IMPORT_USERNAME).one()
     #except NoResltFound:
@@ -226,12 +250,32 @@ def get_index_page(start_section_url='https://www.avito.ru/moskva/tovary_dlya_ko
             print('Успешное чтение')
             print('+'*70)
             index_page_parser(req_response.text, page_counter)
+        elif req_response.status_code == 429:
+            while req_response.status_code == 429:
+                print('response = 429 Too many requests')
+                min_wait *= 2
+                max_wait *= 2
+                wait_time = random.uniform(min_wait, max_wait)
+                print('Ожидание ', wait_time)
+                time.sleep(wait_time)
+                if page_counter > 1 :
+                    payload = {'p': str(page_counter)}
+                    req_response = requests.get(start_section_url, headers=fake_header, params=payload)
+                else:
+                    req_response = requests.get(start_section_url, headers=fake_header)
+            if req_response.status_code == 200:
+                print('Успешное чтение ссылки',item_url)
+                get_item_data(req_response.text)
+            else:
+                print('ВНИМАНИЕ ОШИБКА ЧТЕНИЯ ссылки', item_url)
+                print('response = ', req_response.status_code)
+
         else:
             print('ВНИМАНИЕ ОШИБКА ЧТЕНИЯ')
             print('+'*70)
         
         #слабый симулякр неравносмерной задержки
-        wait_time = random.uniform(4, 7)
+        wait_time = random.uniform(min_wait, max_wait)
         time.sleep(wait_time)
 
 
