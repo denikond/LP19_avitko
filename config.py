@@ -7,6 +7,7 @@ class Config(object):
         'sqlite:///' + os.path.join(basedir, 'avitko.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = '48x7nKY4'
+    ITEMS_PER_PAGE = 20
 
 #создание путей под картинки
 img_normal_dir = os.path.join(basedir, "app", "static", "images", "normal")
