@@ -9,14 +9,14 @@ class Config(object):
     SECRET_KEY = '48x7nKY4'
 
 #создание путей под картинки
-img_normal_dir = os.path.join(basedir, "images", "normal")
-img_thumb_dir = os.path.join(basedir, "images", "thumb")
-thumb_size = (640, 480)
+img_normal_dir = os.path.join(basedir, "app", "static", "images", "normal")
+img_thumb_dir = os.path.join(basedir, "app", "static", "images", "thumb")
+THUMB_SIZE = (250, 200)
 SYS_IMPORT_USERNAME = '_sys_import'
 SYS_IMPORT_MAIL = 'sysimport@localhost'
 
 #создание каталогов под картинки
-f_im = os.path.join(basedir, 'images')
+f_im = os.path.join(basedir, "app", "static", "images")
 if not os.path.exists(f_im):
     os.mkdir(f_im)
 del f_im
