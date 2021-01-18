@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        
+        {% if title %}
+        <title>{{ title }} - AVITKO</title>
+        {% else %}
+        <title>Магазинчик AVITKO</title>
+        {% endif %}
+
+    </head>
+    <body>
+        <div id="header">AVITKO:  
+        <a href="{{ url_for('index') }}">Home</a>
+        {% if current_user.is_anonymous %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a>Добро пожаловать, Гость</a>
+        {% else %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+        <a>Добро пожаловать, {{ current_user.username }}</a>
+        {% endif %}
+        </div>
+        {% block content %}{% endblock %}
+    </body>
+</html>
