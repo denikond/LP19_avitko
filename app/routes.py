@@ -14,13 +14,17 @@ from werkzeug.urls import url_parse
 #@login_required Если есть строгое требование работать только с авторизованными пользователями
 def index():
     title = "Объявления по теме"
-    #i_set = Item.query.limit(20).offset(1).all()
-    i_set = db.session.query(Item,Image).join(Image).group_by(Item).limit(20).all()
     
-    #iset = ['One','Two','Three']
+    page = request.args.get('page', 1, type=int)
+    i_set = db.session.query(Item,Image).join(Image).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
+
+    next_url = url_for('index', page=i_set.next_num) \
+        if i_set.has_next else None
+    prev_url = url_for('index', page=i_set.prev_num) \
+        if i_set.has_prev else None           
     
-    #return render_template('item_list.html', page_title=title, ilist=iset)
-    return render_template('item_list.html', page_title=title, i_list=i_set)
+    return render_template('item_list.html', page_title=title, i_list=i_set, next_url=next_url, prev_url=prev_url)
+
 
 @app.cli.command("import-avitodata")
 @click.argument('start_index_page', nargs=1)
