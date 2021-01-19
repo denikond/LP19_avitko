@@ -13,8 +13,7 @@ from werkzeug.urls import url_parse
 @app.route('/index')
 #@login_required Если есть строгое требование работать только с авторизованными пользователями
 def index():
-    title = "Объявления по теме"
-    
+        
     page = request.args.get('page', 1, type=int)
     i_set = db.session.query(Item,Image).join(Image).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
 
@@ -23,7 +22,9 @@ def index():
     prev_url = url_for('index', page=i_set.prev_num) \
         if i_set.has_prev else None           
     
-    return render_template('item_list.html', page_title=title, i_list=i_set, next_url=next_url, prev_url=prev_url)
+    title = "Каталог страница " + str(i_set.page) + " из " + str(i_set.pages)
+
+    return render_template('item_list.html', title=title, i_list=i_set, next_url=next_url, prev_url=prev_url)
 
 
 @app.cli.command("import-avitodata")
@@ -48,6 +49,19 @@ def import_data_from_avito_to_db(start_index_page, stop_index_page):
         get_avito_page.get_index_page(pagenum_start=int(start_index_page), pagenum_end=int(stop_index_page))
     else:
         print('Начальная страница сканирования должна быть больше или равна конечной')
+
+@app.route('/item/<ad_num>')
+def my_item(ad_num):
+    #title = "Объявления по теме"
+
+    item_ = db.session.query(Item).filter(Item.num_of_ad==ad_num)[0]
+    title = "Объявление " + item_.num_of_ad
+
+    images_ = db.session.query(Image).filter(Image.num_of_ad==ad_num).all()
+    images_ = [[str(ind), image.image_path] for ind, image in enumerate(images_)]
+    
+    return render_template('item.html', title=title, item_=item_, images=images_)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

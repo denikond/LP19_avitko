@@ -35,7 +35,7 @@
                 <li class="list-group-item">
                     <div class="media align-items-lg-center flex-column flex-lg-row"> <img src="/static/images/thumb/{{ p_item.Image.image_path }}" alt="Generic placeholder image" width="250" height="200" class="order-1 order-lg-1">
                         <div class="media-body order-2 order-lg-2 ml-lg-5">
-                            <h5 class="mt-0 mb-1">{{ p_item.Item.description }}</h5>
+                            <h5 class="mt-0 mb-1"><a href="/item/{{ p_item.Item.num_of_ad }}"> {{ p_item.Item.description }}</a></h5>
 							<div class="product-rating mb-2"> <span class="rating-review mb-1">№ {{ p_item.Item.num_of_ad }}</span> </div> <span class="product_price price-new">₽ {{ p_item.Item.price }} </span>
                             <!-- <div class="product-rating mb-2"> <span class="badge23"><i class="fa fa-star"></i> 4 Star</span> <span class="rating-review mb-1">4 Ratings &amp; 3 Recommendations</span> </div> <span class="product_price price-new">₽ {{ p_item.price }} </span> -->
                             <hr class="mb-2 mt-1 seperator">
