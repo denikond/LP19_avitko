@@ -9,6 +9,7 @@ from flask_login import logout_user, current_user, login_user, login_required
 from datetime import datetime
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
+import os
 
 @app.route('/')
 @app.route('/index')
@@ -110,7 +111,7 @@ def additem():
         files_filenames = []
         for file in form.images_.data:
             file_filename = secure_filename(file.filename)
-            data.save(os.path.join(app.config['UPLOAD_FOLDER'], data_filename))
+            file.save(os.path.join(app.config['TEMP_FOLDER'], file_filename))
             files_filenames.append(file_filename)
         print(files_filenames)
         return render_template('additem.html', title='Новое объявление', form=form)
