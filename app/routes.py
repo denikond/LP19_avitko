@@ -1,13 +1,14 @@
 from flask import render_template, session, flash, redirect, url_for, request
 from markupsafe import escape
 from app import app, db
-from app.forms import LoginForm, RegistrationForm
+from app.forms import LoginForm, RegistrationForm, NewItem
 import click
 import get_avito_page
 from app.models import Item, Image, User
 from flask_login import logout_user, current_user, login_user, login_required
 from datetime import datetime
 from werkzeug.urls import url_parse
+from werkzeug.utils import secure_filename
 
 @app.route('/')
 @app.route('/index')
@@ -70,7 +71,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
+            flash('Неверный логин или пароль')
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
@@ -95,9 +96,37 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Congratulations, you are now a registered user!')
+        flash('Поздравляю, теперь Вы - зарегистрированый пользователь')
         return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
+    return render_template('register.html', title='Регистрация', form=form)
+
+@app.route('/additem', methods=['GET', 'POST'])
+@login_required
+def additem():
+    form = NewItem()
+    
+    if form.validate_on_submit():
+
+        files_filenames = []
+        for file in form.images_.data:
+            file_filename = secure_filename(file.filename)
+            data.save(os.path.join(app.config['UPLOAD_FOLDER'], data_filename))
+            files_filenames.append(file_filename)
+        print(files_filenames)
+        return render_template('additem.html', title='Новое объявление', form=form)
+
+
+        #item_ = Item(description=form.description.data, num_of_ad='000000000', creation_date=datetime.now(), \
+        #    address=form.address.data, price=form.price.data, extended_text=form.extended_text.data,user_id=current_user.id)
+        #
+        #db.session.add(item_)
+        #db.session.commit()
+        #flash('Создано новое объявление')
+        #return redirect(url_for('index'))
+
+    return render_template('additem.html', title='Новое объявление', form=form)
+
+
 
 """
 вызов сервисной страницы отключен временно по согласованию с Собиром,
