@@ -33,5 +33,8 @@ class NewItem(FlaskForm):
     address = StringField('Адрес', validators=[DataRequired()])
     price = IntegerField('Цена', validators=[DataRequired(), NumberRange(min=1, message='Цена не должна быть меньше 1')])
     extended_text = StringField('Доп.информация', widget=TextArea(), validators=[DataRequired()])
-    images_ = MultipleFileField('Загрузить фото')
     submit = SubmitField('Добавить объявление')
+
+class AddPhoto(FlaskForm):
+    images_ = MultipleFileField('Загрузить фото')
+    add_photo = SubmitField('Добавить фото')

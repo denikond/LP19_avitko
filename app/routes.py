@@ -1,7 +1,7 @@
 from flask import render_template, session, flash, redirect, url_for, request
 from markupsafe import escape
 from app import app, db
-from app.forms import LoginForm, RegistrationForm, NewItem
+from app.forms import LoginForm, RegistrationForm, NewItem, AddPhoto
 import click
 import get_avito_page
 from app.models import Item, Image, User
@@ -104,17 +104,24 @@ def register():
 @app.route('/additem', methods=['GET', 'POST'])
 @login_required
 def additem():
-    form = NewItem()
     
-    if form.validate_on_submit():
+    images_ = []
+    form = NewItem()
+    form_img = AddPhoto()
+    
 
-        files_filenames = []
+
+    if form_img.validate_on_submit():
+        
         for file in form.images_.data:
             file_filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['TEMP_FOLDER'], file_filename))
             files_filenames.append(file_filename)
         print(files_filenames)
-        return render_template('additem.html', title='Новое объявление', form=form)
+        return render_template('additem.html', title='Новое объявление', form=form, form_img=form_img, images_=images_)
+
+
+    if form.validate_on_submit():
 
 
         #item_ = Item(description=form.description.data, num_of_ad='000000000', creation_date=datetime.now(), \
@@ -123,9 +130,9 @@ def additem():
         #db.session.add(item_)
         #db.session.commit()
         #flash('Создано новое объявление')
-        #return redirect(url_for('index'))
+        return redirect(url_for('index'))
 
-    return render_template('additem.html', title='Новое объявление', form=form)
+    return render_template('additem.html', title='Новое объявление', form=form, form_img=form_img, images_=images_)
 
 
 
