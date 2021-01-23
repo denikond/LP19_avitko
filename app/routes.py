@@ -52,9 +52,8 @@ def import_data_from_avito_to_db(start_index_page, stop_index_page):
 
 @app.route('/item/<ad_num>')
 def my_item(ad_num):
-    #title = "Объявления по теме"
 
-    item_ = db.session.query(Item).filter(Item.num_of_ad==ad_num)[0]
+    item_ = Item.query.filter_by(num_of_ad=ad_num).first_or_404()
     title = "Объявление " + item_.num_of_ad
 
     images_ = db.session.query(Image).filter(Image.num_of_ad==ad_num).all()
