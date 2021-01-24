@@ -19,16 +19,35 @@
                     <div class="col-md">
                         <div id="custCarousel" class="carousel slide" data-ride="carousel" align="center">
                             <!-- slides -->
+                            {% if not not images %}
                             <div class="carousel-inner">
-
+                                <div class="carousel-item active"> <img src="..\static\images\temp\normal\{{ images[0][1] }}" alt="Hills" width="1280" height="960"> </div>
+                                {% for image in images[1:] %}
+                                <div class="carousel-item"> <img src="..\static\images\temp\normal\{{ image[1] }}" alt="Hills" width="1280" height="960"> </div>
+                                {% endfor %}
                             </div>
 
                             <!-- Left right --> 
+                            <a class="carousel-control-prev" href="#custCarousel" data-slide="prev"> 
+                            <span class="carousel-control-prev-icon"></span> </a> 
+                            <a class="carousel-control-next" href="#custCarousel" data-slide="next"> 
+                            <span class="carousel-control-next-icon"></span> </a> 
                             
                             <!-- Thumbnails -->
                             <ol class="carousel-indicators list-inline">
-
-                            </ol>
+                                <li class="list-inline-item active"> <a id="carousel-selector-0" class="selected" data-slide-to="0" data-target="#custCarousel"> <img src="..\static\images\temp\thumb\{{ images[0][1] }}" class="img-fluid" width="640" height="480"> </a> </li>
+                                {% for image in images[1:] %}
+                                <li class="list-inline-item"> <a id="carousel-selector-{{ image[0] }}" data-slide-to="{{ image[0] }}" data-target="#custCarousel"> <img src="..\static\images\temp\thumb\{{ image[1] }}" class="img-fluid" width="640" height="480"> </a> </li>
+                                {% endfor %}
+                             </ol>
+                             {% endif %}
+                        </div>
+                        <div id="add_photo" style="text-align:right;position: absolute;bottom: 0; right: 0">
+                            <form action="" method="post" enctype="multipart/form-data">
+                                {{ form_img.hidden_tag() }}
+                                {{ form_img.images_ }}
+                                {{ form_img.add_photo() }}
+                            </form>
                         </div>
                     </div>
 
@@ -70,10 +89,8 @@
                                 {{ form.submit() }}
                             </div>
                         </form>
-                        <form action="" method="post" enctype="multipart/form-data">
-                            {{ form_img.hidden_tag() }}
-                            {{ form_img.add_photo() }}
-                        </form>
+                        
+
                     </div>
 
 

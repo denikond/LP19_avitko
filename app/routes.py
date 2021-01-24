@@ -1,4 +1,4 @@
-from flask import render_template, session, flash, redirect, url_for, request
+from flask import render_template, session, flash, redirect, url_for, request, send_from_directory
 from markupsafe import escape
 from app import app, db
 from app.forms import LoginForm, RegistrationForm, NewItem, AddPhoto
@@ -10,6 +10,8 @@ from datetime import datetime
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 import os
+from PIL import Image as PImage
+from config import THUMB_SIZE
 
 @app.route('/')
 @app.route('/index')
@@ -110,31 +112,59 @@ def additem():
     form_img = AddPhoto()
     
 
-
-    if form_img.validate_on_submit():
-        
-        for file in form.images_.data:
-            file_filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['TEMP_FOLDER'], file_filename))
-            files_filenames.append(file_filename)
-        print(files_filenames)
-        return render_template('additem.html', title='Новое объявление', form=form, form_img=form_img, images_=images_)
-
-
     if form.validate_on_submit():
 
 
-        #item_ = Item(description=form.description.data, num_of_ad='000000000', creation_date=datetime.now(), \
-        #    address=form.address.data, price=form.price.data, extended_text=form.extended_text.data,user_id=current_user.id)
-        #
-        #db.session.add(item_)
-        #db.session.commit()
-        #flash('Создано новое объявление')
+        item_ = Item(description=form.description.data, num_of_ad='000000000', creation_date=datetime.now(), \
+            address=form.address.data, price=form.price.data, extended_text=form.extended_text.data,user_id=current_user.id)
+        
+        db.session.add(item_)
+        db.session.flush()
+
+        item_.num_of_ad = 'L' + str(item_.key)
+
+        db.session.commit()
+        flash('Создано новое объявление')
         return redirect(url_for('index'))
 
-    return render_template('additem.html', title='Новое объявление', form=form, form_img=form_img, images_=images_)
+    elif form_img.validate_on_submit():
+        images_ = []
+        for ind, file in enumerate(form_img.images_.data):
+
+            fo_name = str(current_user.id) + "_" + (f"{str(ind):>3}").replace(" ","0") + ".jpg"
+            fo_norm = os.path.join(app.config['TEMP_FOLDER'], 'normal', fo_name)
+            fo_thumb = os.path.join(app.config['TEMP_FOLDER'], 'thumb', fo_name)
+
+            #file_filename = secure_filename(file.filename)
+            try:
+                file.save(os.path.join(fo_norm))
+            except Exception as err:
+                print(err)
+            else:
+                try:
+                    with PImage.open(fo_norm) as im:
+                        im.thumbnail(THUMB_SIZE)
+                        im.save(fo_thumb, "JPEG")
+                except OSError:
+                    flash("Не возможно создать миниатюру для ", fo_norm)
+                else:
+                    flash("Создана миниатюра ", fo_thumb)
+
+            images_.append(fo_name)
+
+        images_ = [[str(ind), image] for ind, image in enumerate(images_)]
+
+        return render_template('additem.html', title='Новое объявление', form=form, form_img=form_img, images=images_, cache='no_cache')
 
 
+
+
+    return render_template('additem.html', title='Новое объявление', form=form, form_img=form_img, images=images_, cache='no_cache')
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/x-icon')
 
 """
 вызов сервисной страницы отключен временно по согласованию с Собиром,
