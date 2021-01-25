@@ -103,10 +103,41 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', title='Регистрация', form=form)
 
+
+@app.route('/edititem/<ad_num>', methods=['GET', 'POST'])
+def edit_item(ad_num):
+
+    item_ = Item.query.filter_by(num_of_ad=ad_num).first_or_404()
+    title = "Объявление " + item_.num_of_ad
+    form_img = AddPhoto()
+
+
+    if item_:
+        form = NewItem(formdata=request.form, obj=item_)
+        #if request.method == 'POST' and form.validate():
+
+        images_ = db.session.query(Image).filter(Image.num_of_ad==ad_num).all()
+        images_ = [[str(ind), image.image_path] for ind, image in enumerate(images_)]
+    
+        return render_template('additem.html', title=title, form=form, form_img=form_img, images=images_)
+
+    else:
+        return 'Error loading #{ad_num}'.format(id=ad_num)
+
 @app.route('/additem', methods=['GET', 'POST'])
 @login_required
 def additem():
     
+    item_ = Item(description=form.description.data, num_of_ad='000000000', creation_date=datetime.now(), \
+            address=form.address.data, price=form.price.data, extended_text=form.extended_text.data,user_id=current_user.id)
+
+    db.session.add(item_)
+    db.session.flush()
+
+    item_.num_of_ad = 'L' + str(item_.key)
+
+    db.session.commit()
+
     images_ = []
     form = NewItem()
     form_img = AddPhoto()
