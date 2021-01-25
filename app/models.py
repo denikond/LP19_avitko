@@ -14,6 +14,7 @@ class Item(db.Model):
     price = db.Column(db.Integer)
     extended_text = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    status = db.Column(db.Integer, db.ForeignKey('item_status.key'))
     #user_id = db.Column(db.Integer)
 
     def __repr__(self):
@@ -27,6 +28,11 @@ class Image(db.Model):
 
     def __repr__(self):
         return '<image_path {}>'.format(self.image_path)
+
+
+class Item_status(db.Model):
+    key = db.Column(db.Integer, primary_key=True)
+    description = description = db.Column(db.String(255))
 
 class User(UserMixin, db.Model):
 
