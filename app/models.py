@@ -32,7 +32,7 @@ class Image(db.Model):
 
 class Item_status(db.Model):
     key = db.Column(db.Integer, primary_key=True)
-    description = description = db.Column(db.String(255))
+    description = db.Column(db.String(255))
 
 class User(UserMixin, db.Model):
 

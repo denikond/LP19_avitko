@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, MultipleFileField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, MultipleFileField, FormField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, NumberRange
 from wtforms.widgets import TextArea
 from app.models import User
@@ -33,8 +33,13 @@ class NewItem(FlaskForm):
     address = StringField('Адрес', validators=[DataRequired()])
     price = IntegerField('Цена', validators=[DataRequired(), NumberRange(min=1, message='Цена не должна быть меньше 1')])
     extended_text = StringField('Доп.информация', widget=TextArea(), validators=[DataRequired()])
-    submit = SubmitField('Добавить объявление')
+    set_aside = SubmitField('Сохранить и выйти')
+    submit = SubmitField('Опубликовать объявление')
 
 class AddPhoto(FlaskForm):
     images_ = MultipleFileField('Загрузить фото')
     add_photo = SubmitField('Добавить фото')
+
+class EditForm(FlaskForm):
+    photos = FormField(AddPhoto)
+    item = FormField(NewItem)

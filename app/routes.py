@@ -4,7 +4,7 @@ from app import app, db
 from app.forms import LoginForm, RegistrationForm, NewItem, AddPhoto
 import click
 import get_avito_page
-from app.models import Item, Image, User
+from app.models import Item, Image, User, Item_status
 from flask_login import logout_user, current_user, login_user, login_required
 from datetime import datetime
 from werkzeug.urls import url_parse
@@ -105,21 +105,29 @@ def register():
 
 
 @app.route('/edititem/<ad_num>', methods=['GET', 'POST'])
+@login_required
 def edit_item(ad_num):
 
-    item_ = Item.query.filter_by(num_of_ad=ad_num).first_or_404()
+
+    item_ = Item.query.filter_by(num_of_ad=ad_num,user_id=current_user.id).first_or_404()
     title = "Объявление " + item_.num_of_ad
-    form_img = AddPhoto()
+
 
 
     if item_:
+
+        images_ = db.session.query(Image).filter(Image.num_of_ad==ad_num).all()
+        images_to_render = [[str(ind), image.image_path] for ind, image in enumerate(images_)]
+
+        form_img = AddPhoto()
+
         form = NewItem(formdata=request.form, obj=item_)
         #if request.method == 'POST' and form.validate():
 
         images_ = db.session.query(Image).filter(Image.num_of_ad==ad_num).all()
         images_ = [[str(ind), image.image_path] for ind, image in enumerate(images_)]
     
-        return render_template('additem.html', title=title, form=form, form_img=form_img, images=images_)
+        return render_template('edititem.html', title=title, form=form, form_img=form_img, images=images_)
 
     else:
         return 'Error loading #{ad_num}'.format(id=ad_num)
@@ -127,17 +135,30 @@ def edit_item(ad_num):
 @app.route('/additem', methods=['GET', 'POST'])
 @login_required
 def additem():
+
+
+    i_status = Item_status.query.filter_by(description='on_edit').first()
+    ad_on_edit = Item.query.filter_by(user_id=current_user.id, status=i_status.key).count()
     
-    item_ = Item(description=form.description.data, num_of_ad='000000000', creation_date=datetime.now(), \
-            address=form.address.data, price=form.price.data, extended_text=form.extended_text.data,user_id=current_user.id)
+    if ad_on_edit < 5:
+        new_item = Item(num_of_ad='000000000', creation_date=datetime.now(), user_id=current_user.id, status=i_status.key)
 
-    db.session.add(item_)
-    db.session.flush()
 
-    item_.num_of_ad = 'L' + str(item_.key)
+        db.session.add(new_item)
+        db.session.flush()
 
-    db.session.commit()
+        new_num_of_ad = 'L' + str(new_item.key)
+        new_item.num_of_ad = new_num_of_ad
 
+        db.session.commit()
+
+        redirect_url = '/edititem/'  + new_num_of_ad
+        return redirect(redirect_url)
+    else:
+        flash("У вас много незаконченных объявлений")
+        return redirect(url_for('index'))  
+
+"""
     images_ = []
     form = NewItem()
     form_img = AddPhoto()
@@ -187,11 +208,8 @@ def additem():
 
         return render_template('additem.html', title='Новое объявление', form=form, form_img=form_img, images=images_, cache='no_cache')
 
-
-
-
     return render_template('additem.html', title='Новое объявление', form=form, form_img=form_img, images=images_, cache='no_cache')
-
+"""
 
 @app.route('/favicon.ico')
 def favicon():
