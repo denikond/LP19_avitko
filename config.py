@@ -4,7 +4,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config(object):
     # ...
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'avitko.db')
+        'sqlite:///' + os.path.join(basedir, 'avitko.db?check_same_thread=False')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = '48x7nKY4'
     ITEMS_PER_PAGE = 20

@@ -20,7 +20,10 @@ import time
 def index():
         
     page = request.args.get('page', 1, type=int)
-    i_set = db.session.query(Item,Image).join(Image).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
+    if current_user.is_authenticated:
+        i_set = db.session.query(Item,Image).join(Image).filter((Item.status == 1) | (Item.user_id==current_user.id)).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
+    else:
+        i_set = db.session.query(Item, Image).join(Image).filter(Item.status == 1).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
 
     next_url = url_for('index', page=i_set.next_num) \
         if i_set.has_next else None
@@ -146,26 +149,28 @@ def edit_item(ad_num):
             images_db = db.session.query(Image).filter(Image.num_of_ad == ad_num).all()
             images_ = [[str(ind), image.image_path] for ind, image in enumerate(images_db)]
 
-
-            for image in images_:
-                fo_norm = os.path.join(config.img_normal_dir, fo_name)
-                fo_thumb = os.path.join(config.img_thumb_dir, fo_name)
-                os.remove(fo_norm)
-                os.remove(fo_thumb)
-
-            try:
-                db.session.query(Image).filter(Image.num_of_ad == ad_num).delete()
-                db.session.commit()
-            except:
-                db.session.rollback()
+            if images_ != []:
+                for image in images_:
+                    fo_norm = os.path.join(img_normal_dir, image[1])
+                    fo_thumb = os.path.join(img_thumb_dir, image[1])
+                    try:
+                        os.remove(fo_norm)
+                        os.remove(fo_thumb)
+                    except Exception as err:
+                        print(err)
+                try:
+                    db.session.query(Image).filter(Image.num_of_ad == ad_num).delete()
+                    db.session.commit()
+                except:
+                    db.session.rollback()
 
             form_img = AddPhoto()
             images_ = []
             for ind, file in enumerate(form_img.images_.data):
                 mills = int(time.time()%1*100000)
-                fo_name = str(ad_num) + "_" + (f"{str(mills):>5}").replace(" ", "0") + "_" (f"{str(ind):>3}").replace(" ", "0") + ".jpg"
-                fo_norm = os.path.join(config.img_normal_dir, fo_name)
-                fo_thumb = os.path.join(config.img_thumb_dir, fo_name)
+                fo_name = ad_num + "_" + (f"{str(mills):>5}").replace(" ", "0") + "_" + (f"{str(ind):>3}").replace(" ", "0") + ".jpg"
+                fo_norm = os.path.join(img_normal_dir, fo_name)
+                fo_thumb = os.path.join(img_thumb_dir, fo_name)
 
                 # file_filename = secure_filename(file.filename)
                 try:
@@ -181,18 +186,25 @@ def edit_item(ad_num):
                         flash("Не возможно создать миниатюру для ", fo_norm)
                     else:
                         flash("Создана миниатюра ", fo_thumb)
+
+                image_to_db = Image(num_of_ad=ad_num, image_path=fo_name)
                 try:
-                    db.session.add(Image(num_of_ad=ad_num, image_path=fo_name))
-                    db.session.commit()
+                    db.session.add(image_to_db)
                 except Exception as err:
                     print(err)
                     db.session.rollback()
                 images_.append(fo_name)
+            try:
+                db.session.commit()
+            except Exception as err:
+                print(err)
+                db.session.rollback()
             images_ = [[str(ind), image] for ind, image in enumerate(images_)]
 
+            item_ = Item.query.filter_by(num_of_ad=ad_num, user_id=current_user.id).first_or_404()
             form = NewItem(formdata=request.form, obj=item_)
-            images_ = db.session.query(Image).filter(Image.num_of_ad == ad_num).all()
-            images_ = [[str(ind), image.image_path] for ind, image in enumerate(images_)]
+            #images_ = db.session.query(Image).filter(Image.num_of_ad == ad_num).all()
+            #images_ = [[str(ind), image.image_path] for ind, image in enumerate(images_)]
             return render_template('edititem.html', title=title, form=form, form_img=form_img, images=images_)
 
         elif "set_aside" in request.form:
