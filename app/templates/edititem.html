@@ -21,9 +21,9 @@
                             <!-- slides -->
                             {% if not not images %}
                             <div class="carousel-inner">
-                                <div class="carousel-item active"> <img src="..\static\images\temp\normal\{{ images[0][1] }}" alt="Hills" width="1280" height="960"> </div>
+                                <div class="carousel-item active"> <img src="..\static\images\normal\{{ images[0][1] }}" alt="Hills" width="1280" height="960"> </div>
                                 {% for image in images[1:] %}
-                                <div class="carousel-item"> <img src="..\static\images\temp\normal\{{ image[1] }}" alt="Hills" width="1280" height="960"> </div>
+                                <div class="carousel-item"> <img src="..\static\images\normal\{{ image[1] }}" alt="Hills" width="1280" height="960"> </div>
                                 {% endfor %}
                             </div>
 
@@ -35,9 +35,9 @@
                             
                             <!-- Thumbnails -->
                             <ol class="carousel-indicators list-inline">
-                                <li class="list-inline-item active"> <a id="carousel-selector-0" class="selected" data-slide-to="0" data-target="#custCarousel"> <img src="..\static\images\temp\thumb\{{ images[0][1] }}" class="img-fluid" width="640" height="480"> </a> </li>
+                                <li class="list-inline-item active"> <a id="carousel-selector-0" class="selected" data-slide-to="0" data-target="#custCarousel"> <img src="..\static\images\thumb\{{ images[0][1] }}" class="img-fluid" width="640" height="480"> </a> </li>
                                 {% for image in images[1:] %}
-                                <li class="list-inline-item"> <a id="carousel-selector-{{ image[0] }}" data-slide-to="{{ image[0] }}" data-target="#custCarousel"> <img src="..\static\images\temp\thumb\{{ image[1] }}" class="img-fluid" width="640" height="480"> </a> </li>
+                                <li class="list-inline-item"> <a id="carousel-selector-{{ image[0] }}" data-slide-to="{{ image[0] }}" data-target="#custCarousel"> <img src="..\static\images\thumb\{{ image[1] }}" class="img-fluid" width="640" height="480"> </a> </li>
                                 {% endfor %}
                              </ol>
                              {% endif %}
@@ -70,7 +70,7 @@
                                 <br>
 
                                 <br>  
-                                <span class="product_info">{{ form.address.label }}  {{ form.address(size=100) }}<span> </div>
+                                <div> <span class="product_info">{{ form.address.label }}  {{ form.address(size=100) }}</span> </div>
                                 <br>
                                 {% for error in form.address.errors %}
                                 <span style="color: red;">[{{ error }}]</span>
@@ -79,7 +79,7 @@
                                 <hr class="singleline">
                                 <br>
 
-                                <div> <span class="product_info">{{ form.extended_text.label }} <br> {{ form.extended_text(cols="100", rows="20") }} <span><br> <br> <br> 
+                                <div> <span class="product_info">{{ form.extended_text.label }} <br> {{ form.extended_text(cols="100", rows="20") }} </span><br> <br> <br>
                                 {% for error in form.extended_text.errors %}
                                 <span style="color: red;">[{{ error }}]</span>
                                 {% endfor %}
@@ -97,7 +97,7 @@
                 
                 </div>
                 <div class="row row-underline">
-                    <div class="col-md-6"> <span class=" deal-text"> </br>  Комментарии</span> </div>
+                    <div class="col-md-6"> <span class=" deal-text"> <br/>  Комментарии</span> </div>
                     <div class="col-md-6"> <a href="#" data-abc="true"> <span class="ml-auto view-all"></span> </a> </div>
                 </div>
 
