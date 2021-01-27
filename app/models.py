@@ -15,10 +15,10 @@ class Item(db.Model):
     extended_text = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     status = db.Column(db.Integer, db.ForeignKey('item_status.key'))
-    #user_id = db.Column(db.Integer)
 
     def __repr__(self):
         return '<num_of_ad:{} | description:{}>'.format(self.num_of_ad, self.description)
+
 
 class Image(db.Model):
 
@@ -33,6 +33,7 @@ class Image(db.Model):
 class Item_status(db.Model):
     key = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(255))
+
 
 class User(UserMixin, db.Model):
 
@@ -51,6 +52,7 @@ class User(UserMixin, db.Model):
         
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
 
 @login.user_loader
 def load_user(id):
