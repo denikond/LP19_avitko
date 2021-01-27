@@ -11,7 +11,8 @@ from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 import os
 from PIL import Image as PImage
-from config import THUMB_SIZE
+from config import THUMB_SIZE, img_normal_dir, img_thumb_dir
+import time
 
 @app.route('/')
 @app.route('/index')
@@ -109,28 +110,113 @@ def register():
 def edit_item(ad_num):
 
 
-    item_ = Item.query.filter_by(num_of_ad=ad_num,user_id=current_user.id).first_or_404()
+    item_ = Item.query.filter_by(num_of_ad=ad_num, user_id=current_user.id).first_or_404()
+    edit_stat = Item_status.query.filter_by(description='on_edit').first()
+    if item_.status != edit_stat:
+        item_.status = edit_stat
+        try:
+            db.session.commit()
+        except Exception as err:
+            db.session.rollback()
     title = "Объявление " + item_.num_of_ad
 
+    if request.method == 'GET':
 
-
-    if item_:
-
-        images_ = db.session.query(Image).filter(Image.num_of_ad==ad_num).all()
-        images_to_render = [[str(ind), image.image_path] for ind, image in enumerate(images_)]
-
-        form_img = AddPhoto()
-
-        form = NewItem(formdata=request.form, obj=item_)
-        #if request.method == 'POST' and form.validate():
-
-        images_ = db.session.query(Image).filter(Image.num_of_ad==ad_num).all()
+        images_ = db.session.query(Image).filter(Image.num_of_ad == ad_num).all()
         images_ = [[str(ind), image.image_path] for ind, image in enumerate(images_)]
-    
-        return render_template('edititem.html', title=title, form=form, form_img=form_img, images=images_)
 
+        if item_:
+            images_ = db.session.query(Image).filter(Image.num_of_ad == ad_num).all()
+            images_to_render = [[str(ind), image.image_path] for ind, image in enumerate(images_)]
+
+            form_img = AddPhoto()
+
+            form = NewItem(formdata=request.form, obj=item_)
+
+            images_ = db.session.query(Image).filter(Image.num_of_ad == ad_num).all()
+            images_ = [[str(ind), image.image_path] for ind, image in enumerate(images_)]
+
+            return render_template('edititem.html', title=title, form=form, form_img=form_img, images=images_)
+        else:
+            return 'Error loading #{ad_num}'.format(id=ad_num)
     else:
-        return 'Error loading #{ad_num}'.format(id=ad_num)
+
+        if "add_photo" in request.form:
+
+            images_db = db.session.query(Image).filter(Image.num_of_ad == ad_num).all()
+            images_ = [[str(ind), image.image_path] for ind, image in enumerate(images_db)]
+
+
+            for image in images_:
+                fo_norm = os.path.join(config.img_normal_dir, fo_name)
+                fo_thumb = os.path.join(config.img_thumb_dir, fo_name)
+                os.remove(fo_norm)
+                os.remove(fo_thumb)
+
+            try:
+                db.session.query(Image).filter(Image.num_of_ad == ad_num).delete()
+                db.session.commit()
+            except:
+                db.session.rollback()
+
+            form_img = AddPhoto()
+            images_ = []
+            for ind, file in enumerate(form_img.images_.data):
+                mills = int(time.time()%1*100000)
+                fo_name = str(ad_num) + "_" + (f"{str(mills):>5}").replace(" ", "0") + "_" (f"{str(ind):>3}").replace(" ", "0") + ".jpg"
+                fo_norm = os.path.join(config.img_normal_dir, fo_name)
+                fo_thumb = os.path.join(config.img_thumb_dir, fo_name)
+
+                # file_filename = secure_filename(file.filename)
+                try:
+                    file.save(os.path.join(fo_norm))
+                except Exception as err:
+                    print(err)
+                else:
+                    try:
+                        with PImage.open(fo_norm) as im:
+                            im.thumbnail(THUMB_SIZE)
+                            im.save(fo_thumb, "JPEG")
+                    except OSError:
+                        flash("Не возможно создать миниатюру для ", fo_norm)
+                    else:
+                        flash("Создана миниатюра ", fo_thumb)
+                try:
+                    db.session.add(Image(num_of_ad=ad_num, image_path=fo_name))
+                    db.session.commit()
+                except Exception as err:
+                    print(err)
+                    db.session.rollback()
+                images_.append(fo_name)
+            images_ = [[str(ind), image] for ind, image in enumerate(images_)]
+
+            form = NewItem(formdata=request.form, obj=item_)
+            images_ = db.session.query(Image).filter(Image.num_of_ad == ad_num).all()
+            images_ = [[str(ind), image.image_path] for ind, image in enumerate(images_)]
+            return render_template('edititem.html', title=title, form=form, form_img=form_img, images=images_)
+
+        elif "set_aside" in request.form:
+
+            item_.description = request.form['description']
+            item_.price = request.form['price']
+            item_.address = request.form['address']
+            item_.extended_text = request.form['extended_text']
+            db.session.commit()
+            return redirect(url_for('index'))
+
+
+        elif "submit" in request.form:
+
+            item_.description = request.form['description']
+            item_.price = request.form['price']
+            item_.address = request.form['address']
+            item_.extended_text = request.form['extended_text']
+            item_.status = Item_status.query.filter_by(description='active').first()
+            db.session.commit()
+            return redirect(url_for('index'))
+
+
+
 
 @app.route('/additem', methods=['GET', 'POST'])
 @login_required
