@@ -21,9 +21,9 @@ def index():
         
     page = request.args.get('page', 1, type=int)
     if current_user.is_authenticated:
-        i_set = db.session.query(Item,Image).join(Image).filter((Item.status == 1) | (Item.user_id==current_user.id)).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
+        i_set = db.session.query(Item,Image,Item_status).join(Image).join(Item_status).filter((Item.status == 1) | (Item.user_id==current_user.id)).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
     else:
-        i_set = db.session.query(Item, Image).join(Image).filter(Item.status == 1).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
+        i_set = db.session.query(Item, Image,Item_status).join(Image).join(Item_status).filter(Item.status == 1).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
 
     next_url = url_for('index', page=i_set.next_num) \
         if i_set.has_next else None
