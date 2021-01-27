@@ -4,11 +4,13 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Nu
 from wtforms.widgets import TextArea
 from app.models import User
 
+
 class LoginForm(FlaskForm):
     username = StringField('Имя пользователя', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     remember_me = BooleanField('Запомнить меня')
     submit = SubmitField('Войти')
+
 
 class RegistrationForm(FlaskForm):
     username = StringField('Имя пользователя', validators=[DataRequired()])
@@ -28,6 +30,7 @@ class RegistrationForm(FlaskForm):
         if user is not None:
             raise ValidationError('Некорректный e-mail адрес.')
 
+
 class NewItem(FlaskForm):
     description = StringField('Описание товара', validators=[DataRequired()])
     address = StringField('Адрес', validators=[DataRequired()])
@@ -36,9 +39,11 @@ class NewItem(FlaskForm):
     set_aside = SubmitField('Сохранить и выйти')
     submit = SubmitField('Опубликовать объявление')
 
+
 class AddPhoto(FlaskForm):
     images_ = MultipleFileField('Загрузить фото')
     add_photo = SubmitField('Добавить фото')
+
 
 class EditForm(FlaskForm):
     photos = FormField(AddPhoto)
