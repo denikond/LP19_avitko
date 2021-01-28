@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, MultipleFileField, FormField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, NumberRange
-from wtforms.widgets import TextArea
+from wtforms.widgets import TextArea, CheckboxInput
 from app.models import User
 
 
@@ -45,6 +45,8 @@ class AddPhoto(FlaskForm):
     add_photo = SubmitField('Добавить фото')
 
 
-class EditForm(FlaskForm):
-    photos = FormField(AddPhoto)
-    item = FormField(NewItem)
+class ItemListForm(FlaskForm):
+    only_my_ad = BooleanField('Мои объявления')
+    unposted_ad = BooleanField('Не опубликованые')
+    submit = SubmitField('Применить фильтр')
+    create_new_ad = SubmitField('Создать новое обявление')

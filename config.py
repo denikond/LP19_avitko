@@ -8,7 +8,7 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = '48x7nKY4'
     ITEMS_PER_PAGE = 20
-    TEMP_FOLDER = os.path.join(basedir, "app", "static", "images", "temp")
+
 
 #создание путей под картинки
 img_normal_dir = os.path.join(basedir, "app", "static", "images", "normal")
@@ -16,6 +16,7 @@ img_thumb_dir = os.path.join(basedir, "app", "static", "images", "thumb")
 THUMB_SIZE = (250, 200)
 SYS_IMPORT_USERNAME = '_sys_import'
 SYS_IMPORT_MAIL = 'sysimport@localhost'
+START_IMG = "start_210128153822.jpg"
 
 #создание каталогов под картинки
 f_im = os.path.join(basedir, "app", "static", "images")

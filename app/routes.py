@@ -1,7 +1,7 @@
 from flask import render_template, session, flash, redirect, url_for, request, send_from_directory
 from markupsafe import escape
 from app import app, db
-from app.forms import LoginForm, RegistrationForm, NewItem, AddPhoto
+from app.forms import LoginForm, RegistrationForm, NewItem, AddPhoto, ItemListForm
 import click
 import get_avito_page
 from app.models import Item, Image, User, Item_status
@@ -11,19 +11,39 @@ from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 import os
 from PIL import Image as PImage
-from config import THUMB_SIZE, img_normal_dir, img_thumb_dir
+from config import THUMB_SIZE, img_normal_dir, img_thumb_dir, START_IMG
 import time
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 #@login_required Если есть строгое требование работать только с авторизованными пользователями
 def index():
-        
+
+
     page = request.args.get('page', 1, type=int)
     if current_user.is_authenticated:
-        i_set = db.session.query(Item,Image,Item_status).join(Image).join(Item_status).filter((Item.status == 1) | (Item.user_id==current_user.id)).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
+        if request.method == 'POST':
+            if 'create_new_ad' in request.form:
+                return redirect(url_for('additem'))
+            elif 'unposted_ad' in request.form:
+                i_set = db.session.query(Item, Image, Item_status).join(Image).join(Item_status).filter(
+                    ((Item.status == 2) | (Item.status == 3)), Item.user_id == current_user.id).group_by(Item).paginate(page, app.config[
+                    'ITEMS_PER_PAGE'], False)
+            elif 'only_my_ad' in request.form:
+                i_set = db.session.query(Item, Image, Item_status).join(Image).join(Item_status).filter(
+                     Item.user_id == current_user.id).group_by(Item).paginate(page, app.config[
+                    'ITEMS_PER_PAGE'], False)
+            else:
+                i_set = db.session.query(Item, Image, Item_status).join(Image).join(Item_status).filter(
+                    (Item.status == 1) | (Item.user_id == current_user.id)).group_by(Item).paginate(page, app.config[
+                    'ITEMS_PER_PAGE'], False)
+        else:
+            i_set = db.session.query(Item, Image, Item_status).join(Image).join(Item_status).filter(
+                (Item.status == 1) | (Item.user_id == current_user.id)).group_by(Item).paginate(page, app.config[
+                'ITEMS_PER_PAGE'], False)
     else:
-        i_set = db.session.query(Item, Image,Item_status).join(Image).join(Item_status).filter(Item.status == 1).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
+        i_set = db.session.query(Item, Image, Item_status).join(Image).join(Item_status).filter(
+            Item.status == 1).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
 
     next_url = url_for('index', page=i_set.next_num) \
         if i_set.has_next else None
@@ -32,7 +52,13 @@ def index():
     
     title = "Каталог страница " + str(i_set.page) + " из " + str(i_set.pages)
 
-    return render_template('item_list.html', title=title, i_list=i_set, next_url=next_url, prev_url=prev_url)
+    if current_user.is_authenticated:
+        form = ItemListForm()
+        return render_template('item_list.html', title=title, i_list=i_set, next_url=next_url, prev_url=prev_url,
+                               form=form)
+    else:
+        return render_template('item_list.html', title=title, i_list=i_set, next_url=next_url, prev_url=prev_url)
+
 
 
 @app.cli.command("import-avitodata")
@@ -153,11 +179,12 @@ def edit_item(ad_num):
                 for image in images_:
                     fo_norm = os.path.join(img_normal_dir, image[1])
                     fo_thumb = os.path.join(img_thumb_dir, image[1])
-                    try:
-                        os.remove(fo_norm)
-                        os.remove(fo_thumb)
-                    except Exception as err:
-                        print(err)
+                    if image[1] != START_IMG:
+                        try:
+                            os.remove(fo_norm)
+                            os.remove(fo_thumb)
+                        except Exception as err:
+                            print(err)
                 try:
                     db.session.query(Image).filter(Image.num_of_ad == ad_num).delete()
                     db.session.commit()
@@ -213,7 +240,10 @@ def edit_item(ad_num):
             item_.price = request.form['price']
             item_.address = request.form['address']
             item_.extended_text = request.form['extended_text']
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception as err:
+                db.session.rollback()
             return redirect(url_for('index'))
 
 
@@ -223,8 +253,12 @@ def edit_item(ad_num):
             item_.price = request.form['price']
             item_.address = request.form['address']
             item_.extended_text = request.form['extended_text']
-            item_.status = Item_status.query.filter_by(description='active').first()
-            db.session.commit()
+            item_.status = Item_status.query.filter_by(description='active').first().key
+            try:
+                db.session.commit()
+            except Exception as err:
+                db.session.rollback()
+
             return redirect(url_for('index'))
 
 
@@ -242,13 +276,18 @@ def additem():
         new_item = Item(num_of_ad='000000000', creation_date=datetime.now(), user_id=current_user.id, status=i_status.key)
 
 
+
         db.session.add(new_item)
         db.session.flush()
 
         new_num_of_ad = 'L' + str(new_item.key)
         new_item.num_of_ad = new_num_of_ad
-
-        db.session.commit()
+        def_image = Image(num_of_ad=new_num_of_ad, image_path=START_IMG)
+        db.session.add(def_image)
+        try:
+            db.session.commit()
+        except Exception as err:
+            print(err)
 
         redirect_url = '/edititem/'  + new_num_of_ad
         return redirect(redirect_url)
@@ -256,68 +295,8 @@ def additem():
         flash("У вас много незаконченных объявлений")
         return redirect(url_for('index'))  
 
-"""
-    images_ = []
-    form = NewItem()
-    form_img = AddPhoto()
-    
-
-    if form.validate_on_submit():
-
-
-        item_ = Item(description=form.description.data, num_of_ad='000000000', creation_date=datetime.now(), \
-            address=form.address.data, price=form.price.data, extended_text=form.extended_text.data,user_id=current_user.id)
-        
-        db.session.add(item_)
-        db.session.flush()
-
-        item_.num_of_ad = 'L' + str(item_.key)
-
-        db.session.commit()
-        flash('Создано новое объявление')
-        return redirect(url_for('index'))
-
-    elif form_img.validate_on_submit():
-        images_ = []
-        for ind, file in enumerate(form_img.images_.data):
-
-            fo_name = str(current_user.id) + "_" + (f"{str(ind):>3}").replace(" ","0") + ".jpg"
-            fo_norm = os.path.join(app.config['TEMP_FOLDER'], 'normal', fo_name)
-            fo_thumb = os.path.join(app.config['TEMP_FOLDER'], 'thumb', fo_name)
-
-            #file_filename = secure_filename(file.filename)
-            try:
-                file.save(os.path.join(fo_norm))
-            except Exception as err:
-                print(err)
-            else:
-                try:
-                    with PImage.open(fo_norm) as im:
-                        im.thumbnail(THUMB_SIZE)
-                        im.save(fo_thumb, "JPEG")
-                except OSError:
-                    flash("Не возможно создать миниатюру для ", fo_norm)
-                else:
-                    flash("Создана миниатюра ", fo_thumb)
-
-            images_.append(fo_name)
-
-        images_ = [[str(ind), image] for ind, image in enumerate(images_)]
-
-        return render_template('additem.html', title='Новое объявление', form=form, form_img=form_img, images=images_, cache='no_cache')
-
-    return render_template('additem.html', title='Новое объявление', form=form, form_img=form_img, images=images_, cache='no_cache')
-"""
 
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/x-icon')
 
-"""
-вызов сервисной страницы отключен временно по согласованию с Собиром,
-реализация отложена
-
-@app.route('/service')
-def service():
-    return render_template('service.html')
-"""
