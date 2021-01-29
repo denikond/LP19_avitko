@@ -22,6 +22,13 @@ def index():
     page = request.args.get('page', 1, type=int)
     if current_user.is_authenticated:
         if request.method == 'POST':
+            current_user.filter_my = int('only_my_ad' in request.form)
+            current_user.filter_public = int('unposted_ad' in request.form)
+            try:
+                db.session.commit()
+            except Exception as err:
+                db.session.rollback()
+                print(err)
             if 'create_new_ad' in request.form:
                 return redirect(url_for('additem'))
             elif 'unposted_ad' in request.form:
@@ -37,9 +44,18 @@ def index():
                     (Item.status == 1) | (Item.user_id == current_user.id)).group_by(Item).paginate(page, app.config[
                     'ITEMS_PER_PAGE'], False)
         else:
-            i_set = db.session.query(Item, Image, Item_status).join(Image).join(Item_status).filter(
-                (Item.status == 1) | (Item.user_id == current_user.id)).group_by(Item).paginate(page, app.config[
-                'ITEMS_PER_PAGE'], False)
+            if current_user.filter_public == 1:
+                i_set = db.session.query(Item, Image, Item_status).join(Image).join(Item_status).filter(
+                    ((Item.status == 2) | (Item.status == 3)), Item.user_id == current_user.id).group_by(Item).paginate(page, app.config[
+                    'ITEMS_PER_PAGE'], False)
+            elif current_user.filter_my == 1:
+                i_set = db.session.query(Item, Image, Item_status).join(Image).join(Item_status).filter(
+                     Item.user_id == current_user.id).group_by(Item).paginate(page, app.config[
+                    'ITEMS_PER_PAGE'], False)
+            else:
+                i_set = db.session.query(Item, Image, Item_status).join(Image).join(Item_status).filter(
+                    (Item.status == 1) | (Item.user_id == current_user.id)).group_by(Item).paginate(page, app.config[
+                    'ITEMS_PER_PAGE'], False)
     else:
         i_set = db.session.query(Item, Image, Item_status).join(Image).join(Item_status).filter(
             Item.status == 1).group_by(Item).paginate(page, app.config['ITEMS_PER_PAGE'], False)
@@ -53,8 +69,17 @@ def index():
 
     if current_user.is_authenticated:
         form = ItemListForm()
+        form.only_my_ad.data = bool(current_user.filter_my)
+        form.unposted_ad.data = bool(current_user.filter_public)
+        try:
+            db.session.commit()
+        except Exception as err:
+            db.session.rollback()
+            print(err)
+#        return redirect(url_for('index', page=current_user.list_page))
+
         return render_template('item_list.html', title=title, i_list=i_set, next_url=next_url, prev_url=prev_url,
-                               form=form)
+                               form=form, user=current_user.id)
     else:
         return render_template('item_list.html', title=title, i_list=i_set, next_url=next_url, prev_url=prev_url)
 
@@ -131,6 +156,23 @@ def register():
         flash('Поздравляю, теперь Вы - зарегистрированый пользователь')
         return redirect(url_for('login'))
     return render_template('register.html', title='Регистрация', form=form)
+
+@app.route('/unpublicitem/<ad_num>', methods=['GET', 'POST'])
+@login_required
+def unpublic_item(ad_num):
+    """
+    Снятие с публикации
+    """
+    item_ = Item.query.filter_by(num_of_ad=ad_num, user_id=current_user.id).first_or_404()
+    act_stat = Item_status.query.filter_by(description='active').first().key
+    edit_stat = Item_status.query.filter_by(description='on_edit').first().key
+    if item_.status == act_stat:
+        item_.status = edit_stat
+        try:
+            db.session.commit()
+        except Exception as err:
+            db.session.rollback()
+    return redirect(url_for('index'))
 
 @app.route('/deleteitem/<ad_num>', methods=['GET', 'POST'])
 @login_required
@@ -345,7 +387,7 @@ def additem():
         return redirect(redirect_url)
     else:
         flash("У вас много незаконченных объявлений")
-        return redirect(url_for('index'))  
+        return redirect(url_for('index'))
 
 
 @app.route('/favicon.ico')

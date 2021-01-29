@@ -44,6 +44,9 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     items = db.relationship('Item', backref='author', lazy='dynamic')
+    list_page = db.Column(db.Integer, default=1)
+    filter_my = db.Column(db.Integer, default=0)
+    filter_public = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return '<User {}>'.format(self.username)

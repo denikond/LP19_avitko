@@ -2,10 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ee2dc44e-0d1c-4de6-b491-a87090e23b5a" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/migrations/versions/313e6e32df91_user_parameters_added.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/edititem.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/edititem.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/Item.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/Item.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/templates/item_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/item_list.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/avitko.db" beforeDir="false" afterPath="$PROJECT_DIR$/avitko.db" afterDir="false" />
     </list>
@@ -91,20 +92,6 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/app/routes.py</url>
-          <line>140</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/app/routes.py</url>
-          <line>159</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
         <watch expression="request.form" />
