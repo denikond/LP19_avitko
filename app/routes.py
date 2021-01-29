@@ -19,7 +19,6 @@ import time
 #@login_required Если есть строгое требование работать только с авторизованными пользователями
 def index():
 
-
     page = request.args.get('page', 1, type=int)
     if current_user.is_authenticated:
         if request.method == 'POST':
@@ -132,6 +131,59 @@ def register():
         flash('Поздравляю, теперь Вы - зарегистрированый пользователь')
         return redirect(url_for('login'))
     return render_template('register.html', title='Регистрация', form=form)
+
+@app.route('/deleteitem/<ad_num>', methods=['GET', 'POST'])
+@login_required
+def delete_item(ad_num):
+    """
+    Пометка объекта в базе, как удаленный
+    """
+    item_ = Item.query.filter_by(num_of_ad=ad_num, user_id=current_user.id).first_or_404()
+    edit_stat = Item_status.query.filter_by(description='on_edit').first().key
+    deleted_stat = Item_status.query.filter_by(description='deleted').first().key
+    if item_.status == edit_stat:
+        item_.status = deleted_stat
+        try:
+            db.session.commit()
+        except Exception as err:
+            db.session.rollback()
+    return redirect(url_for('index'))
+
+
+@app.route('/deletepitem/<ad_num>', methods=['GET', 'POST'])
+@login_required
+def delete_item_permanent(ad_num):
+    """
+    Перманентное удаление объявления
+    Удаление фото с диска, записей о фото из базы, объявление
+    """
+    item_ = Item.query.filter_by(num_of_ad=ad_num, user_id=current_user.id).first_or_404()
+    deleted_stat = Item_status.query.filter_by(description='deleted').first().key
+    if item_.status == deleted_stat:
+        #Удаляем картинки с диска
+        images_db = db.session.query(Image).filter(Image.num_of_ad == ad_num).all()
+        images_ = [[str(ind), image.image_path] for ind, image in enumerate(images_db)]
+
+        if images_ != []:
+            for image in images_:
+                fo_norm = os.path.join(img_normal_dir, image[1])
+                fo_thumb = os.path.join(img_thumb_dir, image[1])
+                if image[1] != START_IMG:
+                    try:
+                        os.remove(fo_norm)
+                        os.remove(fo_thumb)
+                    except Exception as err:
+                        print(err)
+            #Удаляем картинки из базы, удаляем объявление из базы
+            try:
+                db.session.query(Image).filter(Image.num_of_ad == ad_num).delete()
+                db.session.flush()
+                db.session.delete(item_)
+                db.session.commit()
+            except:
+                db.session.rollback()
+
+    return redirect(url_for('index'))
 
 
 @app.route('/edititem/<ad_num>', methods=['GET', 'POST'])

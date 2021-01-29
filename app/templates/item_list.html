@@ -46,17 +46,35 @@
                 <li class="list-group-item">
                     <div class="media align-items-lg-center flex-column flex-lg-row"> <img src="/static/images/thumb/{{ p_item.Image.image_path }}" alt="Generic placeholder image" width="250" height="200" class="order-1 order-lg-1">
                         <div class="media-body order-2 order-lg-2 ml-lg-5">
+                            {% if p_item.Item.description %}
                             <h5 class="mt-0 mb-1"><a href="/item/{{ p_item.Item.num_of_ad }}"> {{ p_item.Item.description }}</a></h5>
-                                {% if p_item.Item.status != 1 %}
-							    <div class="product-rating mb-2"> <span class="rating-review mb-1"> <p align="right"> <a href="/edititem/{{ p_item.Item.num_of_ad }}"> Редактировать </a></p></span> </div>
-                                {% endif %}
+                            {% else %}
+                            <h5 class="mt-0 mb-1"><a href="/item/{{ p_item.Item.num_of_ad }}"> Надо бы заполнить</a></h5>
+                            {% endif %}
+                            {% if p_item.Item.status == 1 %}
+                            <div class="product-rating mb-2"> <span class="rating-review mb-1"> <p align="right"> <a href="/unpublicitem/{{ p_item.Item.num_of_ad }}"> Снять с публикации </a> </p></span> </div>
+                            {% endif %}
+                            {% if p_item.Item.status == 2 %}
+                            <div class="product-rating mb-2"> <span class="rating-review mb-1"> <p align="right"> <a href="/deleteitem/{{ p_item.Item.num_of_ad }}"> Удалить </a> <a href="/edititem/{{ p_item.Item.num_of_ad }}"> Редактировать </a></p></span> </div>
+                            {% endif %}
+                            {% if p_item.Item.status == 3 %}
+                            <div class="product-rating mb-2"> <span class="rating-review mb-1"> <p align="right"> <a href="/deletepitem/{{ p_item.Item.num_of_ad }}"> Удалить навсегда</a> </p></span> </div>
+                            {% endif %}
                             <div class="product-rating mb-2"> <span class="rating-review mb-1">№ {{ p_item.Item.num_of_ad }}</span> </div>
+                            {% if p_item.Item.price %}
                             <span class="product_price price-new">₽ {{ p_item.Item.price }} </span>
+                            {% else %}
+                            <span class="product_price price-new">₽ Надо бы заполнить </span>
+                            {% endif %}
                             <!-- <div class="product-rating mb-2"> <span class="badge23"><i class="fa fa-star"></i> 4 Star</span> <span class="rating-review mb-1">4 Ratings &amp; 3 Recommendations</span> </div> <span class="product_price price-new">₽ {{ p_item.price }} </span> -->
                             <hr class="mb-2 mt-1 seperator">
                             <div class="d-flex align-items-center justify-content-between mt-1">
 								<ul class="list-inline small">
-									Адрес: {{ p_item.Item.address }}
+                                    {% if p_item.Item.address %}
+                                    Адрес: {{ p_item.Item.address }}
+									{% else %}
+                                    Адрес: Надо бы заполнить
+                                    {% endif %}
 								</ul>
 								<ul class="list-inline small">
 									Дата публикации: {{ p_item.Item.creation_date }} <br/>
