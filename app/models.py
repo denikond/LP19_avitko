@@ -14,10 +14,11 @@ class Item(db.Model):
     price = db.Column(db.Integer)
     extended_text = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    #user_id = db.Column(db.Integer)
+    status = db.Column(db.Integer, db.ForeignKey('item_status.key'))
 
     def __repr__(self):
         return '<num_of_ad:{} | description:{}>'.format(self.num_of_ad, self.description)
+
 
 class Image(db.Model):
 
@@ -28,6 +29,13 @@ class Image(db.Model):
     def __repr__(self):
         return '<image_path {}>'.format(self.image_path)
 
+
+class Item_status(db.Model):
+    key = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(255))
+    usr_desc = db.Column(db.String(255))
+
+
 class User(UserMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
@@ -36,6 +44,9 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     items = db.relationship('Item', backref='author', lazy='dynamic')
+    list_page = db.Column(db.Integer, default=1)
+    filter_my = db.Column(db.Integer, default=0)
+    filter_public = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -45,6 +56,7 @@ class User(UserMixin, db.Model):
         
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
 
 @login.user_loader
 def load_user(id):
