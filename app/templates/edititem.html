@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+        <link href="..\static\styles\item.css" rel="stylesheet">
+        <link href="..\static\styles\carousel.css" rel="stylesheet">
+        
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+
+
+        <div class="single_product">
+            <div class="container-fluid" style=" background-color: rgb(128, 128, 128); padding: 11px;">
+
+                <div class="row">
+
+                    <div class="col-md">
+                        <div id="custCarousel" class="carousel slide" data-ride="carousel" align="center">
+                            <!-- slides -->
+                            {% if not not images %}
+                            <div class="carousel-inner">
+                                <div class="carousel-item active"> <img src="..\static\images\normal\{{ images[0][1] }}" alt="Hills" width="1280" height="960"> </div>
+                                {% for image in images[1:] %}
+                                <div class="carousel-item"> <img src="..\static\images\normal\{{ image[1] }}" alt="Hills" width="1280" height="960"> </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Left right --> 
+                            <a class="carousel-control-prev" href="#custCarousel" data-slide="prev"> 
+                            <span class="carousel-control-prev-icon"></span> </a> 
+                            <a class="carousel-control-next" href="#custCarousel" data-slide="next"> 
+                            <span class="carousel-control-next-icon"></span> </a> 
+                            
+                            <!-- Thumbnails -->
+                            <ol class="carousel-indicators list-inline">
+                                <li class="list-inline-item active"> <a id="carousel-selector-0" class="selected" data-slide-to="0" data-target="#custCarousel"> <img src="..\static\images\thumb\{{ images[0][1] }}" class="img-fluid" width="640" height="480"> </a> </li>
+                                {% for image in images[1:] %}
+                                <li class="list-inline-item"> <a id="carousel-selector-{{ image[0] }}" data-slide-to="{{ image[0] }}" data-target="#custCarousel"> <img src="..\static\images\thumb\{{ image[1] }}" class="img-fluid" width="640" height="480"> </a> </li>
+                                {% endfor %}
+                             </ol>
+                             {% endif %}
+                        </div>
+                        <div id="add_photo" style="text-align:right;position: absolute;bottom: 0; right: 0">
+                            <form action="" method="post" enctype="multipart/form-data">
+                                {{ form_img.hidden_tag() }}
+                                {{ form_img.images_ }}
+                                {{ form_img.add_photo() }}
+                            </form>
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-6 order-3">
+                        <form action="" method="post" enctype="multipart/form-data">
+                            {{ form.hidden_tag() }}
+                        
+                            <div class="product_description">
+                                <div class="product_name">{{ form.description.label }} <br> {{ form.description(size=70) }}</div>
+                                {% for error in form.description.errors %}
+                                <span style="color: red;">[{{ error }}]</span>
+                                {% endfor %}
+                                <br>
+
+                                <div> <span class="product_price">{{ form.price.label }} {{ form.price(size=8) }} Р </span> </div>
+                                {% for error in form.price.errors %}
+                                <span style="color: rgba(255, 0, 0, 0.336);">[{{ error }}]</span>
+                                {% endfor %}
+                                <br>
+
+                                <br>  
+                                <div> <span class="product_info">{{ form.address.label }}  {{ form.address(size=100) }}</span> </div>
+                                <br>
+                                {% for error in form.address.errors %}
+                                <span style="color: red;">[{{ error }}]</span>
+                                {% endfor %}
+
+                                <hr class="singleline">
+                                <br>
+
+                                <div> <span class="product_info">{{ form.extended_text.label }} <br> {{ form.extended_text(cols="100", rows="20") }} </span><br> <br> <br>
+                                {% for error in form.extended_text.errors %}
+                                <span style="color: red;">[{{ error }}]</span>
+                                {% endfor %}
+                                    <!-- <span class="product_info">For future use<span> -->
+                                </div>
+                                {{ form.set_aside() }}
+                                {{ form.submit() }}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="row row-underline">
+                    <div class="col-md-6"> <span class=" deal-text"> <br/>  </span> </div>
+                    <div class="col-md-6"> <a href="#" data-abc="true"> <span class="ml-auto view-all"></span> </a> </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+{% endblock %}

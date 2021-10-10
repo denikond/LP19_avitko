@@ -40,18 +40,32 @@
                             <div class="col-md-6 order-3">
                                 <br>
                                 <div class="product_description">
+                                    {% if item_.description %}
                                     <div class="product_name">{{ item_.description }}</div>
+                                    {% else %}
+                                    <div class="product_name">Надо бы заполнить</div>
+                                    {% endif %}
                                     <br>
                                     <div> <span class="product_price">{{ item_.price }} Р </span> </div>
+
                                     <br>
                                     <hr class="singleline">
-                                    <div> <span class="product_info">№ {{ item_.num_of_ad }}<span><br> <br> <br> <br> <span class="product_info">{{ item_.address }}<span> </div>
+                                    <div> <span class="product_info">№ {{ item_.num_of_ad }}</span><br> <br> <br> <br>
+                                        {% if item_.address %}
+                                        <span class="product_info">{{ item_.address }}</span>
+                                        {% else %}
+                                        <span class="product_info">Надо бы заполнить</span>
+                                        {% endif %}
+                                    </div>
                                     
                                     <hr class="singleline">
                                     
-                                    <div> <span class="product_info">{{ item_.extended_text }}<span><br> <br> <br> <br> 
-                                        <!-- <span class="product_info">For future use<span> -->
-
+                                    <div>
+                                        {% if item_.extended_text %}
+                                        <span class="product_info">{{ item_.extended_text }}</span><br> <br> <br> <br>
+                                        {% else %}
+                                        <span class="product_info">Надо бы заполнить</span><br> <br> <br> <br>
+                                        {% endif %}
                                     </div>
                                     
                                     
@@ -71,50 +85,50 @@
                                 <table class="col-md-12">
                                     <tbody>
                                         <tr class="row mt-10">
-                                            <td class="col-md-4"><span class="p_specification">Sales Package :</span> </td>
+                                            <br/>
                                             <td class="col-md-8">
                                                 <ul>
-                                                    <li>2 in 1 Laptop, Power Adaptor, Active Stylus Pen, User Guide, Warranty Documents</li>
+                                                    <br/>
                                                 </ul>
                                             </td>
                                         </tr>
                                         <tr class="row mt-10">
-                                            <td class="col-md-4"><span class="p_specification">Model Number :</span> </td>
+                                            <br/>
                                             <td class="col-md-8">
                                                 <ul>
-                                                    <li> 14-dh0107TU </li>
+                                                    <br/>
                                                 </ul>
                                             </td>
                                         </tr>
                                         <tr class="row mt-10">
-                                            <td class="col-md-4"><span class="p_specification">Part Number :</span> </td>
+                                            <br/>
                                             <td class="col-md-8">
                                                 <ul>
-                                                    <li>7AL87PA</li>
+                                                    <br/>
                                                 </ul>
                                             </td>
                                         </tr>
                                         <tr class="row mt-10">
-                                            <td class="col-md-4"><span class="p_specification">Color :</span> </td>
+                                            <br/>
                                             <td class="col-md-8">
                                                 <ul>
-                                                    <li>Black</li>
+                                                    <br/>
                                                 </ul>
                                             </td>
                                         </tr>
                                         <tr class="row mt-10">
-                                            <td class="col-md-4"><span class="p_specification">Suitable for :</span> </td>
+                                            <br/>
                                             <td class="col-md-8">
                                                 <ul>
-                                                    <li>Processing & Multitasking</li>
+                                                    <<br/>
                                                 </ul>
                                             </td>
                                         </tr>
                                         <tr class="row mt-10">
-                                            <td class="col-md-4"><span class="p_specification">Processor Brand :</span> </td>
+                                            <br/>
                                             <td class="col-md-8">
                                                 <ul>
-                                                    <li>Intel</li>
+                                                   <br/>
                                                 </ul>
                                             </td>
                                         </tr>
